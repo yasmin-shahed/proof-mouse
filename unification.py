@@ -89,13 +89,35 @@ and_comm = And(a, b), And(b, a)
 or_assoc = Or(Or(a, b), c), Or(a, Or(b, c))
 and_assoc = And(And(a, b), c), And(a, And(b, c))
 
+# double negation
 double_neg = a, Imp(Imp(a, False), False)
+
+# implication equivalence
+impl_equiv = Imp(a, b), Or(Not(a), b)
+
+# distributivity
+distr_and_or = And(a, Or(b, c)), Or(And(a, b), And(a, c))
+distr_or_and = Or(a, And(b, c)), And(Or(a, b), Or(a, c))
+
+# demorgan's laws
+demorgan_and_or = Not(And(a, b)), Or(Not(a), Not(b))
+demorgan_or_and = Not(Or(a, b)), And(Not(a), Not(b))
+
+# exportation
+exp = Imp(a, Imp(b, c)), Imp(And(a, b), c)
 
 OrComm = make_argument(or_comm, 'comm')
 AndComm = make_argument(and_comm, 'comm')
 OrAssoc = make_argument(or_assoc, 'assoc')
 AndAssoc = make_argument(and_assoc, 'assoc')
 DoubleNeg = make_argument(double_neg, 'dn')
+ImplEquiv = make_argument(impl_equiv, 'impl')
+DistribAndOr = make_argument(distr_and_or, 'dist')
+DistribOrAnd = make_argument(distr_or_and, 'dist')
+DemorganAndOr = make_argument(demorgan_and_or, 'dm')
+DemorganOrAnd = make_argument(demorgan_or_and, 'dm')
+Exportation = make_argument(exp, 'exp')
+
 
 # A, B, C, D = BaseProp('A'), BaseProp('B'), BaseProp('C'), BaseProp('D')
 

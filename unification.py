@@ -92,6 +92,9 @@ and_assoc = And(And(a, b), c), And(a, And(b, c))
 # double negation
 double_neg = a, Imp(Imp(a, False), False)
 
+# contrapositive
+cp = Imp(a, b), Imp(Not(b), Not(a))
+
 # implication equivalence
 impl_equiv = Imp(a, b), Or(Not(a), b)
 
@@ -117,6 +120,7 @@ DistribOrAnd = make_argument(distr_or_and, 'dist')
 DemorganAndOr = make_argument(demorgan_and_or, 'dm')
 DemorganOrAnd = make_argument(demorgan_or_and, 'dm')
 Exportation = make_argument(exp, 'exp')
+Contrapositive = make_argument(cp, 'cp')
 
 
 # A, B, C, D = BaseProp('A'), BaseProp('B'), BaseProp('C'), BaseProp('D')

@@ -1,27 +1,11 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 from props import *
+from unification import *
 
 if TYPE_CHECKING:
     from proof import Line, Context
-    
-
-class UninterpJust:
-    def __init__(self, name: str, args: list[int]) -> None:
-        self.name = name
-        self.args = args
-        
-    def interpret(self) -> Argument:
-        
-        return Argument()
-    
-    def __repr__(self) -> str:
-        return f'{self.name} {self.args}'
-
-class Argument:
-    def typecheck(self, _: Prop) -> bool:
-        raise NotImplemented
     
 
 class ModusPonens(Argument):
@@ -118,3 +102,63 @@ class Hypothesis(Argument):
 
     def __repr__(self) -> str:
         return 'hyp'
+
+
+class Deduction(Argument):
+    def __init__(self, hyp: Prop, ded: set[Prop]) -> None:
+        self.hyp = hyp
+        self.ded = ded
+        
+    def typecheck(self, expected: Prop) -> bool:
+        assert isinstance(expected, Imp), f'Cannot use deduction rule on `{expected}`, as its not an implication!'
+        hyp = expected.p
+        ded = expected.q
+        assert ded in self.ded, f'Cannot deduce `{ded}` from proof!'
+        assert hyp == self.hyp, f'Proof does not take `{hyp}` as its hypothesis!'
+        return True
+
+
+argument_lookup: dict[str, Callable[[list[Line]], Argument]] = {
+    'mp': lambda args: ModusPonens(*args),
+    'mt': lambda args: ModusTollens(*args),
+    'simp': lambda args: Simplify(*args),
+    'add': lambda args: Addition(*args),
+    'hs': lambda args: HypotheticalSyllogism(*args),
+    'ds': lambda args: DisjunctiveSyllogism(*args),
+    'de': lambda args: DisjunctiveElimination(*args),
+    'hyp': lambda args: Hypothesis(*args),  # type: ignore
+    'prem': lambda args: Hypothesis(*args), # type: ignore
+    
+    'or_comm': lambda args: OrComm(*args),
+    'and_comm': lambda args: AndComm(*args),
+    'or_assoc': lambda args: OrAssoc(*args),
+    'and_assoc': lambda args: AndAssoc(*args),
+    'dn': lambda args: DoubleNeg(*args),
+    'impl': lambda args: ImplEquiv(*args),
+    'dist_ao': lambda args: DistribAndOr(*args),
+    'dist_oa': lambda args: DistribOrAnd(*args),
+    'dm_ao': lambda args: DemorganAndOr(*args),
+    'dm_oa': lambda args: DemorganOrAnd(*args),
+    'exp': lambda args: Exportation(*args),
+    'cp': lambda args: Contrapositive(*args)
+}
+
+class UninterpJust:
+    def __init__(self, name: str, args: list[int]) -> None:
+        self.name = name
+        self.args = args
+        
+    def interpret(self, ctx: Context) -> Argument:
+        if self.name == 'ded':
+            assert tuple(sorted(self.args)) in ctx.proofs, f'{min(self.args)}-{max(self.args)} does not denote a complete proof!'
+            proof = ctx.proofs[tuple(sorted(self.args))]
+            hyp, ded = ctx.proof_types[proof]
+            assert len(hyp) == 1, 'A proof that uses multiple hypotheses cannot be used in the deduction rule!'
+            return Deduction(list(hyp)[0], ded)
+            
+        assert self.name in argument_lookup, f'{self.name} is not a recognized justification!'
+        lines = [ctx.lines[arg] for arg in self.args]
+        return argument_lookup[self.name](lines)
+    
+    def __repr__(self) -> str:
+        return f'{self.name} {self.args}'

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Callable
-from arguments import Argument
 from props import *
 
 if TYPE_CHECKING:
@@ -65,6 +64,11 @@ def try_rewrite(transformation, rule):
         return rewrite()
 
     
+class Argument:
+    def typecheck(self, _: Prop) -> bool:
+        raise NotImplemented
+    
+    
 def make_argument(rule: tuple[Prop, Prop], name: str) -> Callable[[Line], Argument]:
     class RW(Argument):
         def __init__(self, old: Line) -> None:
@@ -121,6 +125,16 @@ DemorganAndOr = make_argument(demorgan_and_or, 'dm')
 DemorganOrAnd = make_argument(demorgan_or_and, 'dm')
 Exportation = make_argument(exp, 'exp')
 Contrapositive = make_argument(cp, 'cp')
+
+__all__ = [
+    'Argument',
+    'OrComm', 'AndComm', 'OrAssoc', 'AndAssoc', 
+    'DoubleNeg', 'ImplEquiv', 
+    'DistribAndOr', 'DistribOrAnd', 
+    'DemorganAndOr', 'DemorganOrAnd',
+    'Exportation',
+    'Contrapositive'
+]
 
 
 # A, B, C, D = BaseProp('A'), BaseProp('B'), BaseProp('C'), BaseProp('D')

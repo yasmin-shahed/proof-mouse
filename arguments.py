@@ -4,10 +4,23 @@ from typing import TYPE_CHECKING
 from props import *
 
 if TYPE_CHECKING:
-    from proof import Line
+    from proof import Line, Context
+    
+
+class UninterpJust:
+    def __init__(self, name: str, args: list[int]) -> None:
+        self.name = name
+        self.args = args
+        
+    def interpret(self) -> Argument:
+        
+        return Argument()
+    
+    def __repr__(self) -> str:
+        return f'{self.name} {self.args}'
 
 class Argument:
-    def typecheck(self, expected: Prop) -> bool:
+    def typecheck(self, _: Prop) -> bool:
         raise NotImplemented
     
 

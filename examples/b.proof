@@ -1,0 +1,41 @@
+/* {T, ~P -> ~T, T -> (R -> Q), ~S -> R} |- P /\ (Q \/ S) */
+/* 1. T prem;
+2. ~P -> ~T prem;
+3. T -> (R -> Q) prem;
+4. ~S -> R prem;
+5. P mt 2, 1;
+6. R -> Q mp 3, 1; 
+{
+  7. ~R hyp;
+  8. ~S -> ~~R dn 4;
+  9. ~~S mt 8, 7;
+  10. S dn 9;
+}
+11. ~R -> S ded 7-10;
+12. ~Q -> ~R cp 6;
+13. ~Q -> S hs 12, 11;
+14. ~~Q \/ S imp 13;
+15. Q \/ S dn 14;
+16. P /\ (Q \/ S) conj 5, 15; */
+
+1. T prem;
+2. ~P -> ~T prem;
+3. T -> (R -> Q) prem;
+4. ~S -> R prem;
+5. ~~T dn 1;
+6. ~~P mt 2, 1;
+7. P dn 6;
+8. R -> Q mp 3, 1;
+{
+  9. ~R hyp;
+  10. ~S -> ~~R dn 4;
+  11. ~~S mt 10, 9;
+  12. S dn 11;
+}
+13. ~R -> S ded 9-12;
+14. ~Q -> ~R cp 8;
+15. ~Q -> S hs 14, 13;
+16. ~~Q \/ S imp 15;
+17. Q \/ S dn 16;
+18. P /\ (Q \/ S) conj 7, 17;
+

@@ -118,6 +118,24 @@ class Deduction(Argument):
         return True
 
 
+class Conjunction(Argument):
+    def __init__(self, p: Line, q: Line) -> None:
+        self.p = p
+        self.q = q
+    def typecheck(self, expected: Prop) -> bool:
+        assert And(self.p.typ, self.q.typ) == expected, f'Expected `{expected}`, but got type `{And(self.p.typ, self.q.typ)}`!'
+        return True
+
+class Disjunction(Argument):
+    def __init__(self, p: Line, q: Line) -> None:
+        self.p = p
+        self.q = q
+    def typecheck(self, expected: Prop) -> bool:
+        assert Or(self.p.typ, self.q.typ) == expected, f'Expected `{expected}`, but got type `{Or(self.p.typ, self.q.typ)}`!'
+        return True
+
+
+
 argument_lookup: dict[str, Callable[[list[Line]], Argument]] = {
     'mp': lambda args: ModusPonens(*args),
     'mt': lambda args: ModusTollens(*args),
@@ -126,6 +144,8 @@ argument_lookup: dict[str, Callable[[list[Line]], Argument]] = {
     'hs': lambda args: HypotheticalSyllogism(*args),
     'ds': lambda args: DisjunctiveSyllogism(*args),
     'de': lambda args: DisjunctiveElimination(*args),
+    'conj': lambda args: Conjunction(*args),
+    'disj': lambda args: Disjunction(*args),
     'hyp': lambda args: Hypothesis(*args),  # type: ignore
     'prem': lambda args: Hypothesis(*args), # type: ignore
     
@@ -134,7 +154,7 @@ argument_lookup: dict[str, Callable[[list[Line]], Argument]] = {
     'or_assoc': lambda args: OrAssoc(*args),
     'and_assoc': lambda args: AndAssoc(*args),
     'dn': lambda args: DoubleNeg(*args),
-    'impl': lambda args: ImplEquiv(*args),
+    'imp': lambda args: ImplEquiv(*args),
     'dist_ao': lambda args: DistribAndOr(*args),
     'dist_oa': lambda args: DistribOrAnd(*args),
     'dm_ao': lambda args: DemorganAndOr(*args),
@@ -153,7 +173,7 @@ class UninterpJust:
             assert tuple(sorted(self.args)) in ctx.proofs, f'{min(self.args)}-{max(self.args)} does not denote a complete proof!'
             proof = ctx.proofs[tuple(sorted(self.args))]
             hyp, ded = ctx.proof_types[proof]
-            assert len(hyp) == 1, 'A proof that uses multiple hypotheses cannot be used in the deduction rule!'
+            assert len(hyp) == 1, f'A proof that uses multiple hypotheses cannot be used in the deduction rule! (hypotheses={hyp})'
             return Deduction(list(hyp)[0], ded)
             
         assert self.name in argument_lookup, f'{self.name} is not a recognized justification!'

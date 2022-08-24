@@ -2,7 +2,7 @@ import pyparsing as pp
 
 from props import And, BaseProp, Imp, Not, Or
 from arguments import UninterpJust
-from proof import Line, Proof
+from proof import Line, Proof, Context
 
 r"""
 Grammar:
@@ -67,8 +67,9 @@ def LineAction(result):
     return Line(result[0], result[1], result[2])
 
 
+ctx = Context()
+
 def ProofAction(result):
-    # input(result)
     external_proofs = []
     main_proof = []
     for line in result:
@@ -76,11 +77,11 @@ def ProofAction(result):
             external_proofs.append(line[0])
         else:
             main_proof.append(line[0])
-    # input(external_proofs)
-    # input(main_proof)
-    ans = external_proofs + [Proof(main_proof)]
-    # input(ans)
-    return ans
+    
+    proof = Proof(main_proof)
+    ctx.add_proof(proof)
+    
+    return proof
 
 
 
@@ -89,7 +90,7 @@ num = pp.Word(pp.nums).set_parse_action(NumAction)
 line_start = pp.Combine(num + pp.Suppress('.')).set_parse_action(NumAction)
 args = ((num + pp.Suppress('-') + num).set_parse_action(ArgRange) | pp.delimited_list(num, ','))
 just = (pp.Word(pp.alphas.lower()) + pp.Optional(args)).set_parse_action(JustAction)
-comment_line = pp.Suppress(pp.QuotedString(quote_char='/*', end_quote_char='*/'))
+comment_line = pp.Suppress(pp.QuotedString(quote_char='/*', end_quote_char='*/', multiline=True))
 single_line = (line_start + form + just).set_parse_action(LineAction) + pp.Suppress(';')
 embedded_proof = pp.Suppress('{') + proof + pp.Suppress('}')
 line = single_line | embedded_proof
@@ -116,10 +117,13 @@ text2 = r'''1. ~(Q /\ Z) prem;
 import sys
 
 try:
-    result = proof.parse_file(sys.argv[1], parse_all=True)
-    print(result)
+    proof.parse_file(sys.argv[1], parse_all=True)
+    print('Parsed successfully!')
+    ctx.check()
 except pp.ParseException as e:
     print(e.explain())
+    
+
 
 # try:
 #     print(form.parse_string(r'~Q \/ ~~Z', parse_all = True))

@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import Literal
 
 
-@dataclass
+@dataclass(eq=True, frozen=True)
 class BaseProp:
     name: str
     
@@ -11,14 +11,14 @@ class BaseProp:
         return self.name
     
     
-@dataclass
+@dataclass(eq=True, frozen=True)
 class PropVar:
     name: str
     
     def __repr__(self) -> str:
         return f'?{self.name}'
     
-@dataclass
+@dataclass(eq=True, frozen=True)
 class And:
     p: Prop
     q: Prop
@@ -26,7 +26,7 @@ class And:
     def __repr__(self) -> str:
         return fr'({self.p} /\ {self.q})'
 
-@dataclass
+@dataclass(eq=True, frozen=True)
 class Or:
     p: Prop
     q: Prop
@@ -34,7 +34,7 @@ class Or:
     def __repr__(self) -> str:
         return fr'({self.p} \/ {self.q})'
        
-@dataclass
+@dataclass(eq=True, frozen=True)
 class Imp:
     p: Prop
     q: Prop

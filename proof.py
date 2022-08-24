@@ -29,7 +29,7 @@ class Proof:
         results: set[Prop] = set()
         
         for line in self.lines.values():
-            if isinstance(line.just, Hypothesis):
+            if isinstance(line.arg, Hypothesis):
                 assumptions.add(line.typ)
             else:
                 results.add(line.typ)

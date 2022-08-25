@@ -67,23 +67,22 @@ def LineAction(result):
     return Line(result[0], result[1], result[2])
 
 
-ctx = Context()
+def ProofActionWithContext(ctx: Context):
+    def ProofAction(result):
+        external_proofs = []
+        main_proof = []
+        for line in result:
+            if isinstance(line[0], Proof):
+                external_proofs.append(line[0])
+            else:
+                main_proof.append(line[0])
+        
+        proof = Proof(main_proof)
+        ctx.add_proof(proof)
+        
+        return proof
 
-def ProofAction(result):
-    external_proofs = []
-    main_proof = []
-    for line in result:
-        if isinstance(line[0], Proof):
-            external_proofs.append(line[0])
-        else:
-            main_proof.append(line[0])
-    
-    proof = Proof(main_proof)
-    ctx.add_proof(proof)
-    
-    return proof
-
-
+    return ProofAction
 
 proof = pp.Forward()
 num = pp.Word(pp.nums).set_parse_action(NumAction)
@@ -95,33 +94,32 @@ single_line = (line_start + form + just).set_parse_action(LineAction) + pp.Suppr
 embedded_proof = pp.Suppress('{') + proof + pp.Suppress('}')
 line = single_line | embedded_proof
 proof <<= pp.OneOrMore(pp.Group(line) | comment_line)
-proof.set_parse_action(ProofAction)
 
-text = r'''1. ~(Q /\ ~Z) prem;
-2. ~Q \/ ~~Z dm 1;
-/* comment */
-3. ~Q \/ Z dn 2;
-4. Q -> Z imp 3;
-5. R -> P prem;
-6. R prem;
-7. P mp 5, 6;
-8. P -> Q prem;
-9. Q mp 8, 7;
-10. Z mp 4, 9;'''
+# text = r'''1. ~(Q /\ ~Z) prem;
+# 2. ~Q \/ ~~Z dm 1;
+# /* comment */
+# 3. ~Q \/ Z dn 2;
+# 4. Q -> Z imp 3;
+# 5. R -> P prem;
+# 6. R prem;
+# 7. P mp 5, 6;
+# 8. P -> Q prem;
+# 9. Q mp 8, 7;
+# 10. Z mp 4, 9;'''
 
-text2 = r'''1. ~(Q /\ Z) prem;
-{
-2. ~Q \/ ~~Z dm 1;
-}'''
+# text2 = r'''1. ~(Q /\ Z) prem;
+# {
+# 2. ~Q \/ ~~Z dm 1;
+# }'''
 
-import sys
+# import sys
 
-try:
-    proof.parse_file(sys.argv[1], parse_all=True)
-    print('Parsed successfully!')
-    ctx.check()
-except pp.ParseException as e:
-    print(e.explain())
+# try:
+#     proof.parse_file(sys.argv[1], parse_all=True)
+#     print('Parsed successfully!')
+#     ctx.check()
+# except pp.ParseException as e:
+#     print(e.explain())
     
 
 

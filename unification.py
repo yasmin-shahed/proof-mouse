@@ -110,6 +110,10 @@ distr_or_and = Or(a, And(b, c)), And(Or(a, b), Or(a, c))
 demorgan_and_or = Not(And(a, b)), Or(Not(a), Not(b))
 demorgan_or_and = Not(Or(a, b)), And(Not(a), Not(b))
 
+# self
+self_or = a, Or(a, a)
+self_and = a, And(a, a)
+
 # exportation
 exp = Imp(a, Imp(b, c)), Imp(And(a, b), c)
 
@@ -125,6 +129,8 @@ DemorganAndOr = make_argument(demorgan_and_or, 'dm')
 DemorganOrAnd = make_argument(demorgan_or_and, 'dm')
 Exportation = make_argument(exp, 'exp')
 Contrapositive = make_argument(cp, 'cp')
+SelfOr = make_argument(self_or, 'self_or')
+SelfAnd = make_argument(self_and, 'self_and')
 
 __all__ = [
     'Argument',
@@ -133,7 +139,8 @@ __all__ = [
     'DistribAndOr', 'DistribOrAnd', 
     'DemorganAndOr', 'DemorganOrAnd',
     'Exportation',
-    'Contrapositive'
+    'Contrapositive',
+    'SelfOr', 'SelfAnd'
 ]
 
 

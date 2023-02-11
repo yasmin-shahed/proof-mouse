@@ -160,7 +160,9 @@ argument_lookup: dict[str, Callable[[list[Line]], Argument]] = {
     'dm_ao': lambda args: DemorganAndOr(*args),
     'dm_oa': lambda args: DemorganOrAnd(*args),
     'exp': lambda args: Exportation(*args),
-    'cp': lambda args: Contrapositive(*args)
+    'cp': lambda args: Contrapositive(*args),
+    'self_or': lambda args: SelfOr(*args),
+    'self_and': lambda args: SelfAnd(*args)
 }
 
 class UninterpJust:

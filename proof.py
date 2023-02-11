@@ -1,4 +1,5 @@
 from __future__ import annotations
+from collections import defaultdict
 
 from props import *
 from arguments import Hypothesis, UninterpJust
@@ -48,6 +49,7 @@ class Context:
         self.proof_types: dict[Proof, tuple[set[Prop], set[Prop]]] = {}
         self.proofs: dict[tuple[int, ...], Proof] = {}
         self.main_proof: Proof | None = None
+        self.dependences: dict[int, set[int]] = defaultdict(set)
     
     def add_proof(self, proof: Proof):
         self.lines.update(proof.lines)
@@ -66,16 +68,23 @@ class Context:
             lines_checked: set[int] = set()
             
             for num in sorted(self.lines.keys()):
-                print(f'Checking line: {self.lines[num]}')
+                print(f'{self.lines[num]}', end='\t')
                 self.lines[num].check(self)
+                print('\u2713')
                 lines_checked.add(num)
                 
                 for lines in self.proofs:
-                    if self.proofs[lines] in remaining_proofs and set(lines).issubset(lines_checked):
+                    if self.proofs[lines] in remaining_proofs and (set(lines).issubset(lines_checked)):
                         self.proofs[lines].compile(self)
                         remaining_proofs.remove(self.proofs[lines])
                 
             return True
         except AssertionError as e:
+            print('\u2717')
             print(f'Error: {e}')
             return False
+            
+        
+    def transitive_dependences(self, line_number: int):
+        deps = set(self.lines[line_number].just.args)
+        return deps | set().union(*(self.transitive_dependences(dep) for dep in deps))

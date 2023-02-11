@@ -139,7 +139,7 @@ class Disjunction(Argument):
 argument_lookup: dict[str, Callable[[list[Line]], Argument]] = {
     'mp': lambda args: ModusPonens(*args),
     'mt': lambda args: ModusTollens(*args),
-    'simp': lambda args: Simplify(*args),
+    'simpl': lambda args: Simplify(*args),
     'add': lambda args: Addition(*args),
     'hs': lambda args: HypotheticalSyllogism(*args),
     'ds': lambda args: DisjunctiveSyllogism(*args),
@@ -161,8 +161,8 @@ argument_lookup: dict[str, Callable[[list[Line]], Argument]] = {
     'dm_oa': lambda args: DemorganOrAnd(*args),
     'exp': lambda args: Exportation(*args),
     'cp': lambda args: Contrapositive(*args),
-    'self_or': lambda args: SelfOr(*args),
-    'self_and': lambda args: SelfAnd(*args)
+    'or_self': lambda args: SelfOr(*args),
+    'and_self': lambda args: SelfAnd(*args)
 }
 
 class UninterpJust:

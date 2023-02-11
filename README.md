@@ -1,22 +1,31 @@
-# Pamplemousse
-Pamplemousse is a proof assistant for a propositional logic based on Gentzen-style proofs.
+# ProofMouse
+ProofMouse is a proof assistant for a propositional logic based on Gentzen-style proofs.
 
+## Table of Contents
+* [Getting Started](#getting-started)
+    * [Installation](#installation)
+    * [Writing Proofs](#writing-proofs)
+    * [Checking Proofs](#checking-proofs)
+*  [Inference Rules Reference](#inference-rules-reference)
+    * [Directional Inference Rules](#directional-inference-rules)
+    * [Deduction Method](#peculiarities-of-hypothetical-worlds-and-deduction-blocks)
+    * [Equivalence Rules](#equivalence-rules)
 ## Getting Started
 
 ### Installation
-Pamplemousse is bundled as a [Python](https://www.python.org) package, and requires Python version 3.8 or higher to run.
+ProofMouse is bundled as a [Python](https://www.python.org) package, and requires Python version 3.8 or higher to run.
 It can be installed via `pip`, either by cloning this repository locally and then running 
 ```
 $ pip install /path/to/repository
 ```
 or by installing directly from GitHub:
 ```
-$ pip install git+https://github.com/raghav198/pamplemousse
+$ pip install git+https://github.com/raghav198/proof-mouse
 ```
-This will install the `pamplemousse` executable.
+This will install the `mouse` executable.
 
 ### Writing Proofs
-A Pamplemousse proof is an ASCII text file.
+A ProofMouse proof is an ASCII text file.
 The first line of the file is a comma-separated list of formulae that specifies your proof obligations, and each subsequent line is a single proof step.
 
 A proof step consists of an explicit line number, the formula being proved in that step, and finally a justification (the inference rule being used, and an optional comma-separated list of line numbers for arguments).
@@ -46,19 +55,19 @@ A full list of inference rules and their semantics can be found [below](#inferen
 For more example proofs, see [examples/](/examples/).
 
 ### Checking Proofs
-Once you have written a Gentzen-style proof and saved it to a text file, the `pamplemousse` checker can automatically verify that your proof is correct:
+Once you have written a Gentzen-style proof and saved it to a text file, the `mouse` checker can automatically verify that your proof is correct:
 
 ```
-$ pamplemousse /path/to/proof.txt
+$ mouse /path/to/proof.txt
 ```
 
-Pamplemousse will record the proof obligation and then check your proof line by line, attempting to unify the formula on each line with the inference rule written as the justification.
+ProofMouse will record the proof obligation and then check your proof line by line, attempting to unify the formula on each line with the inference rule written as the justification.
 
-If unification fails for a line, Pamplemousse will print out an error detailing what went wrong and exit.
-Once all lines have been successfully verified, Pamplemousse checks the list of formulas proven against the proof obligations, failing if any proof obligations have not been met.
+If unification fails for a line, ProofMouse will print out an error detailing what went wrong and exit.
+Once all lines have been successfully verified, ProofMouse checks the list of formulas proven against the proof obligations, failing if any proof obligations have not been met.
 
 ## Inference Rules Reference
-The tables below present all the inference rules available to Pamplemousse.
+The tables below present all the inference rules available to ProofMouse.
 The inference rules are written using type variables (`a`, `b`, `c`).
 These type variables can be substituted for _any well-formed formula_, however, the same formula must be substitued for _every instance_ of the same type variable in the same row of the table. 
 
@@ -80,6 +89,11 @@ Remember that the order of the arguments matters, so e.g. the Modus Ponens rule 
 | `disj` | `a`, `b` | `a \/ b` |
 
 There is also the deduction rule: `ded` which takes a list of line numbers corresponding to the lines of the "hypothetical world" proof.
+
+### Peculiarities of Hypothetical Worlds and Deduction Blocks
+1. When using the deduction rule, is may be more convenient to write a range of line numbers instead of a list; this can be accomplished with the `x-y` syntax, which expands to the list of lines from `x` to `y`, inclusive on both ends.
+1. In the case of nested hypothetical worlds, the line numbers of the inner world do not also belong to the other world. For example, the exportation proof presented [above](#writing-proofs) would fail if line 7 instead read `7. A -> (B -> C) ded 2-6`
+1. A hypothetical world can only introduce a single hypothesis. However, ProofMouse does not distinguish between premises and hypotheses, which means all premises must be introduced outside of any hypothetical world.
 
 ### Equivalence Rules
 The semantics of the equivalence rules differ from those of the directional inference rules in two ways:
@@ -104,8 +118,3 @@ Notice that common rules like `self`, `dm`, and `comm`/`assoc` have specialized 
 | `cp` | `a -> b` | `~b -> ~a` |
 | `self_or` | `a \/ a` | `a` |
 | `self_and` | `a /\ a` | `a` |
-
-### Peculiarities of Hypothetical Worlds and Deduction Blocks
-1. When using the deduction rule, is may be more convenient to write a range of line numbers instead of a list; this can be accomplished with the `x-y` syntax, which expands to the list of lines from `x` to `y`, inclusive on both ends.
-1. In the case of nested hypothetical worlds, the line numbers of the inner world do not also belong to the other world. For example, the exportation proof presented [above](#writing-proofs) would fail if line 7 instead read `7. A -> (B -> C) ded 2-6`
-1. A hypothetical world can only introduce a single hypothesis. However, Pamplemousse does not distinguish between premises and hypotheses, which means all premises must be introduced outside of any hypothetical world.

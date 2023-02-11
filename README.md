@@ -116,5 +116,5 @@ Notice that common rules like `self`, `dm`, and `comm`/`assoc` have specialized 
 | `dm_oa`| `~(a \/ b)` | `~a /\ ~b` |
 | `exp` | `a -> (b -> c)` | `(a /\ b) -> c` |
 | `cp` | `a -> b` | `~b -> ~a` |
-| `self_or` | `a \/ a` | `a` |
-| `self_and` | `a /\ a` | `a` |
+| `or_self` | `a \/ a` | `a` |
+| `and_self` | `a /\ a` | `a` |

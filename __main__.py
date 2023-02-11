@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
 from proof_parser import proof, form, ProofActionWithContext
 from proof import Context
-from pyparsing import ParseException
+from pyparsing import ParseException, delimited_list
 
 def preprocess(lines: list[str]) -> list[str]:
     processed_lines: list[str] = []
@@ -26,16 +26,18 @@ if __name__ == '__main__':
     args = parser.parse_args()
     try:
         lines = open(args.input_file).readlines()
-        obligation = form.parse_string(lines[0], parse_all=True)[0]
+        obligations = delimited_list(form, ',').parse_string(lines[0], parse_all=True)
+        # obligation = form.parse_string(lines[0], parse_all=True)[0]
         text = '\n'.join(preprocess(lines[1:]))
         proof.parse_string(text, parse_all=True)
         if ctx.check():
             assert ctx.main_proof is not None
             hyp, deds = ctx.proof_types[ctx.main_proof]
-            if obligation in deds:
-                print(f'{hyp} |- {obligation}')
-            else:
-                raise Exception(f'Proof obligation {obligation} not met!')
+            for obligation in obligations:
+                if obligation in deds:
+                    print(f'{hyp} |- {obligation}')
+                else:
+                    raise Exception(f'Proof obligation {obligation} not met!')
         
     except ParseException as e:
         print(e.explain())

@@ -1,5 +1,6 @@
 from __future__ import annotations
 from collections import defaultdict
+from typing import List, Dict, Set
 
 from props import *
 from arguments import Hypothesis, UninterpJust
@@ -20,14 +21,14 @@ class Line:
     
 
 class Proof:
-    def __init__(self, lines: list[Line]):
-        self.lines: dict[int, Line] = {}
+    def __init__(self, lines: List[Line]):
+        self.lines: Dict[int, Line] = {}
         for line in lines:
             self.lines[line.num] = line
             
-    def compile(self, ctx: Context) -> tuple[set[Prop], set[Prop]]:
-        assumptions: set[Prop] = set()
-        results: set[Prop] = set()
+    def compile(self, ctx: Context) -> tuple[Set[Prop], Set[Prop]]:
+        assumptions: Set[Prop] = set()
+        results: Set[Prop] = set()
         
         for line in self.lines.values():
             if isinstance(line.arg, Hypothesis):
@@ -45,18 +46,18 @@ class Proof:
 
 class Context:
     def __init__(self) -> None:
-        self.lines: dict[int, Line] = {}
-        self.proof_types: dict[Proof, tuple[set[Prop], set[Prop]]] = {}
-        self.proofs: dict[tuple[int, ...], Proof] = {}
+        self.lines: Dict[int, Line] = {}
+        self.proof_types: Dict[Proof, tuple[Set[Prop], Set[Prop]]] = {}
+        self.proofs: Dict[tuple[int, ...], Proof] = {}
         self.main_proof: Proof | None = None
-        self.dependences: dict[int, set[int]] = defaultdict(set)
+        self.dependences: Dict[int, Set[int]] = defaultdict(set)
     
     def add_proof(self, proof: Proof):
         self.lines.update(proof.lines)
         self.proofs[tuple(sorted(proof.lines.keys()))] = proof
         self.main_proof = proof
         
-    def register_type(self, proof: Proof, typ: tuple[set[Prop], set[Prop]]):
+    def register_type(self, proof: Proof, typ: tuple[Set[Prop], Set[Prop]]):
         self.proof_types[proof] = typ
         
     def check(self) -> bool:
@@ -65,7 +66,7 @@ class Context:
             return False
         try:
             remaining_proofs = set(self.proofs.values())
-            lines_checked: set[int] = set()
+            lines_checked: Set[int] = set()
             
             for num in sorted(self.lines.keys()):
                 print(f'{self.lines[num]}', end='\t')

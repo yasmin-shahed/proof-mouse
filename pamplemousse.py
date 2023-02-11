@@ -2,9 +2,10 @@ from argparse import ArgumentParser
 from proof_parser import proof, form, ProofActionWithContext
 from proof import Context
 from pyparsing import ParseException, delimited_list
+from typing import List
 
-def preprocess(lines: list[str]) -> list[str]:
-    processed_lines: list[str] = []
+def preprocess(lines: List[str]) -> List[str]:
+    processed_lines: List[str] = []
     block = []
     for line in lines:
         if line.startswith('| '):

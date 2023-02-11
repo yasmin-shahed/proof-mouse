@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from proof import Line
 
 
-def unify(p: Prop, q: Prop, subst: dict[str, Prop]) -> bool:
+def unify(p: Prop, q: Prop, subst: Dict[str, Prop]) -> bool:
     if PropVar in (type(p), type(q)):
         if type(p) is PropVar:
             var, exp = p.name, q

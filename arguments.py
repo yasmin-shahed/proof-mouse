@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, Callable, Set, Dict, List
 from props import *
 from unification import *
 
@@ -105,7 +105,7 @@ class Hypothesis(Argument):
 
 
 class Deduction(Argument):
-    def __init__(self, hyp: Prop, ded: set[Prop]) -> None:
+    def __init__(self, hyp: Prop, ded: Set[Prop]) -> None:
         self.hyp = hyp
         self.ded = ded
         
@@ -136,7 +136,7 @@ class Disjunction(Argument):
 
 
 
-argument_lookup: dict[str, Callable[[list[Line]], Argument]] = {
+argument_lookup: Dict[str, Callable[[List[Line]], Argument]] = {
     'mp': lambda args: ModusPonens(*args),
     'mt': lambda args: ModusTollens(*args),
     'simpl': lambda args: Simplify(*args),
@@ -166,7 +166,7 @@ argument_lookup: dict[str, Callable[[list[Line]], Argument]] = {
 }
 
 class UninterpJust:
-    def __init__(self, name: str, args: list[int]) -> None:
+    def __init__(self, name: str, args: List[int]) -> None:
         self.name = name
         self.args = args
         

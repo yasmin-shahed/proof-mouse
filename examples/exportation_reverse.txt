@@ -1,0 +1,8 @@
+(A /\ B) -> C
+1. A -> (B -> C) prem;
+| 2. A /\ B hyp;
+| 3. A simpl 2;
+| 4. B -> C mp 1, 3;
+| 5. B simpl 2;
+| 6. C mp 4, 5;
+7. (A /\ B) -> C ded 2-6; 

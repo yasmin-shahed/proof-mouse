@@ -17,7 +17,7 @@ def preprocess(lines: list[str]) -> list[str]:
     
     return processed_lines
 
-if __name__ == '__main__':    
+def main():    
     ctx = Context()
     proof.add_parse_action(ProofActionWithContext(ctx))
 
@@ -41,3 +41,7 @@ if __name__ == '__main__':
         
     except ParseException as e:
         print(e.explain())
+        
+        
+if __name__ == '__main__':
+    main()

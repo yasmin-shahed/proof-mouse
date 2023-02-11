@@ -13,7 +13,7 @@ setuptools.setup(
     url='https://github.com/raghav198/pamplemousse',
     license='MIT',
     packages=['.'],
-    requires=['pyparsing'],
+    install_requires=['pyparsing'],
     entry_points={
         'console_scripts': ['pamplemousse=pamplemousse:main']
     }

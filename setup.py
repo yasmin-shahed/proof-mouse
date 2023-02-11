@@ -15,6 +15,6 @@ setuptools.setup(
     packages=['.'],
     install_requires=['pyparsing'],
     entry_points={
-        'console_scripts': ['pamplemousse=pamplemousse:main']
+        'console_scripts': ['mouse=pamplemousse:main']
     }
 )

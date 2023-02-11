@@ -1,6 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Literal
+from typing import Literal, Union
 
 
 @dataclass(eq=True, frozen=True)
@@ -48,7 +48,7 @@ def Not(p: Prop) -> Prop:
     return Imp(p, False)
 
 
-Prop = BaseProp | PropVar | And | Or | Imp | Literal[True] | Literal[False]
+Prop = Union[BaseProp, PropVar, And, Or, Imp, Literal[True], Literal[False]]
 
 
 def apply(f: Prop, x: Prop) -> Prop:

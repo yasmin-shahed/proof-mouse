@@ -1,3 +1,4 @@
+# type: ignore
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Callable
@@ -21,30 +22,52 @@ def unify(p: Prop, q: Prop, subst: dict[str, Prop]) -> bool:
         subst[var] = exp
         return True
     
-    match p, q:
-        case (And(a, b), And(c, d)) | (Or(a, b), Or(c, d)) | (Imp(a, b), Imp(c, d)):
-            return unify(a, c, subst) and unify(b, d, subst)
-        case PropVar(a), PropVar(b):
-            assert False, 'Whoops! I need to implement this :)'
-        case (True, True) | (False, False):
-            return True
-        case BaseProp(a), BaseProp(b):
-            return a == b
-        case _:
-            return False
+    if type(p) != type(q):
+        return False
+    if type(p) in (And, Or, Imp):
+        return unify(p.p, q.p, subst) and unify(p.q, q.q, subst) # type: ignore
+    if type(p) == PropVar:
+        assert False, 'Whoops! I need to implement this :)'
+    if type(p) == bool and p == q:
+        return True
+    if type(p) == BaseProp:
+        return p.name == q.name # type: ignore
+    
+    # match p, q:
+    #     case (And(a, b), And(c, d)) | (Or(a, b), Or(c, d)) | (Imp(a, b), Imp(c, d)):
+    #         return unify(a, c, subst) and unify(b, d, subst)
+    #     case PropVar(a), PropVar(b):
+    #         assert False, 'Whoops! I need to implement this :)'
+    #     case (True, True) | (False, False):
+    #         return True
+    #     case BaseProp(a), BaseProp(b):
+    #         return a == b
+    #     case _:
+    #         return False
         
 def diff_tree(p: Prop, q: Prop) -> tuple[Prop, Prop]:
-    match p, q:
-        case (And(a, b), And(c, d)) | (Or(a, b), Or(c, d)) | (Imp(a, b), Imp(c, d)):
-            if a != c and b != d:
-                return p, q
-            if a == c:
-                return diff_tree(b, d)
-            if b == d:
-                return diff_tree(a, c)
-            assert False, f'{p} == {q}!'
-        case _:
+    if type(p) != type(q):
+        return p, q
+    if type(p) in (And, Or, Imp):
+        if p.p != q.p and p.q != q.q:
             return p, q
+        if p.p == q.p:
+            return diff_tree(p.q, q.q)
+        if p.q == q.q:
+            return diff_tree(p.p, q.p)
+        assert False, f'{p} == {q}'
+    
+    # match p, q:
+    #     case (And(a, b), And(c, d)) | (Or(a, b), Or(c, d)) | (Imp(a, b), Imp(c, d)):
+    #         if a != c and b != d:
+    #             return p, q
+    #         if a == c:
+    #             return diff_tree(b, d)
+    #         if b == d:
+    #             return diff_tree(a, c)
+    #         assert False, f'{p} == {q}!'
+    #     case _:
+    #         return p, q
         
 def try_rewrite(transformation, rule):
     if transformation[0] == transformation[1]:

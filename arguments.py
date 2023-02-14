@@ -90,7 +90,7 @@ class DisjunctiveElimination(Argument):
     def typecheck(self, expected: Prop) -> bool:
         imp = univ_coprod(self.imp1.typ, self.imp2.typ)
         stack = apply(imp, self.disj.typ)
-        return codiag(stack) == expected
+        return stack == expected
     
     def __repr__(self) -> str:
         return f'de {self.disj.num}, {self.imp1.num}, {self.imp2.num}'

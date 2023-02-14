@@ -91,7 +91,7 @@ Remember that the order of the arguments matters, so e.g. the Modus Ponens rule 
 There is also the deduction rule: `ded` which takes a list of line numbers corresponding to the lines of the "hypothetical world" proof.
 
 ### Peculiarities of Hypothetical Worlds and Deduction Blocks
-1. When using the deduction rule, is may be more convenient to write a range of line numbers instead of a list; this can be accomplished with the `x-y` syntax, which expands to the list of lines from `x` to `y`, inclusive on both ends.
+1. When using the deduction rule, it may be more convenient to write a range of line numbers instead of a list; this can be accomplished with the `x-y` syntax, which expands to the list of lines from `x` to `y`, inclusive on both ends.
 1. In the case of nested hypothetical worlds, the line numbers of the inner world do not also belong to the other world. For example, the exportation proof presented [above](#writing-proofs) would fail if line 7 instead read `7. A -> (B -> C) ded 2-6`
 1. A hypothetical world can only introduce a single hypothesis. However, ProofMouse does not distinguish between premises and hypotheses, which means all premises must be introduced outside of any hypothetical world.
 
@@ -116,5 +116,5 @@ Notice that common rules like `self`, `dm`, and `comm`/`assoc` have specialized 
 | `dm_oa`| `~(a \/ b)` | `~a /\ ~b` |
 | `exp` | `a -> (b -> c)` | `(a /\ b) -> c` |
 | `cp` | `a -> b` | `~b -> ~a` |
-| `self_or` | `a \/ a` | `a` |
-| `self_and` | `a /\ a` | `a` |
+| `or_self` | `a \/ a` | `a` |
+| `and_self` | `a /\ a` | `a` |

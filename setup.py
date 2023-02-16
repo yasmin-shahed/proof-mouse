@@ -5,7 +5,7 @@ long_description = open('README.md').read()
 
 setuptools.setup(
     name='pamplemousse',
-    version='0.3',
+    version='0.4',
     author='Raghav Malik',
     author_email='malik22@purdue.edu',
     description='Pamplemousse proof checker',

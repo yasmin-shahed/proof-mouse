@@ -4,6 +4,9 @@ from proof import Context
 from pyparsing import ParseException, delimited_list
 from typing import List
 
+from props import Not, Or, Prop, PropVar
+from unification import unify
+
 def preprocess(lines: List[str]) -> List[str]:
     processed_lines: List[str] = []
     block = []
@@ -17,6 +20,10 @@ def preprocess(lines: List[str]) -> List[str]:
         processed_lines.append(line.strip())
     
     return processed_lines
+
+def is_axiom(p: Prop):
+    a = PropVar('a')
+    return unify(p, Or(a, Not(a)), {}) or unify(p, Or(Not(a), a), {})
 
 def main():    
     ctx = Context()
@@ -34,9 +41,10 @@ def main():
         if ctx.check():
             assert ctx.main_proof is not None
             hyp, deds = ctx.proof_types[ctx.main_proof]
+            non_axiom_hyp = {h for h in hyp if not is_axiom(h)}
             for obligation in obligations:
                 if obligation in deds:
-                    print(f'{hyp} |- {obligation}')
+                    print(f'{non_axiom_hyp} |- {obligation}')
                 else:
                     raise Exception(f'Proof obligation {obligation} not met!')
         

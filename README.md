@@ -118,3 +118,6 @@ Notice that common rules like `self`, `dm`, and `comm`/`assoc` have specialized 
 | `cp` | `a -> b` | `~b -> ~a` |
 | `or_self` | `a \/ a` | `a` |
 | `and_self` | `a /\ a` | `a` |
+
+
+also you cant explicitly cite your hypothesis in a deduction

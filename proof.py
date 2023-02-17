@@ -33,8 +33,7 @@ class Proof:
         for line in self.lines.values():
             if isinstance(line.arg, Hypothesis):
                 assumptions.add(line.typ)
-            else:
-                results.add(line.typ)
+            results.add(line.typ)
         ctx.register_type(self, (assumptions, results))
         return assumptions, results
     

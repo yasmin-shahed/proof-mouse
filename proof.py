@@ -11,10 +11,11 @@ class Line:
         self.num = num
         self.typ = typ
         self.just = just
+        self.variables: Dict[str, Set[str]] = {}
         
     def check(self, ctx: Context):
         self.arg = self.just.interpret(ctx)
-        assert self.arg.typecheck(self.typ), f'Cannot use `{self.arg}` to produce {self.typ}!'
+        assert self.arg.verify(self), f'Cannot use `{self.arg}` to produce {self.typ}!'
         
     def __repr__(self) -> str:
         return f'{self.num}. {self.typ} {self.just}'

@@ -134,6 +134,60 @@ class Disjunction(Argument):
         assert Or(self.p.typ, self.q.typ) == expected, f'Expected `{expected}`, but got type `{Or(self.p.typ, self.q.typ)}`!'
         return True
 
+class UniversalInstantiation(Argument):
+    def __init__(self, quant: Line) -> None:
+        self.quant = quant
+        
+    def verify(self, line: Line):
+        line.variables.update(self.quant.variables)
+        assert isinstance(self.quant.typ, ForAll), 'Cannot universally instantiate a formula that is not universally quantified!'
+        assert self.quant.typ.formula == line.typ, f'Cannot universally instantiate {self.quant.typ} to get {line.typ}!'
+        assert self.quant.typ.var.name not in line.variables, f'Cannot instantiate {self.quant.typ.var}: variable already instantiated!'
+        line.variables[self.quant.typ.var.name] = set()
+        return True
+        
+    
+class UniversalGeneralization(Argument):
+    def __init__(self, form: Line) -> None:
+        self.form = form
+        
+    def verify(self, line: Line):
+        line.variables.update(self.form.variables)
+        assert isinstance(line.typ, ForAll), 'Cannot universally generalize to a formula that is not universally quantified!'
+        assert self.form.typ == line.typ.formula, f'Cannot universally instantiate {line.typ} to get {self.form.typ}!'
+        assert line.typ.var.name in line.variables, f'Cannot generalize {line.typ.var}: variable not instantiated!'
+        assert len(line.variables[line.typ.var.name]) == 0, f'Cannot generalize {line.typ.var}: dependent e.i. variables are still in scope!'
+        del line.variables[line.typ.var.name]
+        return True
+
+
+class ExistentialInstantiation(Argument):
+    def __init__(self, quant: Line) -> None:
+        self.quant = quant
+        
+    def verify(self, line: Line):
+        line.variables.update(self.quant.variables)
+        assert isinstance(self.quant.typ, Exists), 'Cannot existentially instantiate a formula that is not existentially quantified!'
+        assert self.quant.typ.formula == line.typ, f'Cannot existentiallys instantiate {self.quant.typ} to get {line.typ}!'
+        assert self.quant.typ.var.name not in line.variables, f'Cannot instantiate {self.quant.typ.var}: variable already instantiated!'
+        
+        for ui in line.variables:
+            line.variables[ui].add(self.quant.typ.var.name)
+        return True
+        
+    
+class ExistentialGeneralization(Argument):
+    def __init__(self, form: Line) -> None:
+        self.form = form
+        
+    def verify(self, line: Line):
+        line.variables.update(self.form.variables)
+        assert isinstance(line.typ, Exists), 'Cannot existentially generalize to a formula that is not existentially quantified!'
+        assert self.form.typ == line.typ.formula, f'Cannot existentially instantiate {line.typ} to get {self.form.typ}!'
+        # assert line.typ.var.name in line.variables, f'Cannot generalize {line.typ.var}: variable not instantiated!'
+        for ui in line.variables:
+            line.variables[ui].discard(line.typ.var.name)
+        return True
 
 
 argument_lookup: Dict[str, Callable[[List[Line]], Argument]] = {
@@ -159,10 +213,17 @@ argument_lookup: Dict[str, Callable[[List[Line]], Argument]] = {
     'dist_oa': lambda args: DistribOrAnd(*args),
     'dm_ao': lambda args: DemorganAndOr(*args),
     'dm_oa': lambda args: DemorganOrAnd(*args),
+    'dm_fe': lambda args: DemorganForallExists(*args),
+    'dm_ef': lambda args: DemorganExistsForall(*args),
     'exp': lambda args: Exportation(*args),
     'cp': lambda args: Contrapositive(*args),
     'or_self': lambda args: SelfOr(*args),
-    'and_self': lambda args: SelfAnd(*args)
+    'and_self': lambda args: SelfAnd(*args),
+    
+    'ei': lambda args: ExistentialInstantiation(*args),
+    'eg': lambda args: ExistentialGeneralization(*args),
+    'ui': lambda args: UniversalInstantiation(*args),
+    'ug': lambda args: UniversalGeneralization(*args)
 }
 
 class UninterpJust:

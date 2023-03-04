@@ -1,14 +1,16 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable, Dict
+from typing import TYPE_CHECKING, Callable, Dict, Set
+
+from numpy import isin
 from props import *
 
 if TYPE_CHECKING:
     from proof import Line
 
 
-def unify(p: Prop, q: Prop, subst: Dict[str, Prop]={}, var_subst: Dict[str, PredVar]={}) -> bool:
+def unify(p: Prop, q: Prop, subst: Dict[str, Prop]={}, var_subst: Dict[str, ModelRef]={}) -> bool:
     if PropHole in (type(p), type(q)):
         if type(p) is PropHole:
             hole, exp = p.name, q
@@ -22,14 +24,14 @@ def unify(p: Prop, q: Prop, subst: Dict[str, Prop]={}, var_subst: Dict[str, Pred
         subst[hole] = exp
         return True
     
-    if PredVarHole in (type(p), type(q)):
-        if type(p) is PredVarHole:
+    if ModelRefHole in (type(p), type(q)):
+        if type(p) is ModelRefHole:
             hole, exp = p.name, q
         else:
-            assert type(q) is PredVarHole
+            assert type(q) is ModelRefHole
             hole, exp = q.name, p
     
-        if not (type(exp) is PredVar):
+        if not (type(exp) is ModelRef):
             return False
         
         if hole in var_subst:
@@ -59,7 +61,7 @@ def unify(p: Prop, q: Prop, subst: Dict[str, Prop]={}, var_subst: Dict[str, Pred
         assert False, 'Whoops! I need to implement this :)'
     elif isinstance(p, bool) and isinstance(q, bool):
         return p == q
-    elif (isinstance(p, BaseProp) and isinstance(q, BaseProp)) or (isinstance(p, PredVar) and isinstance(q, PredVar)):
+    elif (isinstance(p, BaseProp) and isinstance(q, BaseProp)) or (isinstance(p, ModelRef) and isinstance(q, ModelRef)):
         return p.name == q.name
     elif (isinstance(p, ForAll) and isinstance(q, ForAll)) or (isinstance(p, Exists) and isinstance(q, Exists)):
         return unify(p.var, q.var, subst, var_subst) and unify(p.formula, q.formula, subst, var_subst)
@@ -117,9 +119,53 @@ def try_rewrite(transformation, rule):
         old_r, new_r = new_r, old_r
         return rewrite()
 
+
+
+def alpha_renaming(orig: Prop, new: Prop, orig_var: ModelRef, subst: Dict[ModelRef, ModelRef]={}):
+    assert type(orig) == type(new), 'Statements differ in more than just variable names!'
+    if (isinstance(orig, And) and isinstance(new, And)) or (isinstance(orig, Or) and isinstance(new, Or)) or (isinstance(orig, Imp) and isinstance(new, Imp)):
+        alpha_renaming(orig.p, new.p, orig_var, subst)
+        alpha_renaming(orig.q, new.q, orig_var, subst)
+    elif (isinstance(orig, ForAll) and isinstance(new, ForAll)) or (isinstance(orig, Exists) and isinstance(new, Exists)):
+        assert orig.var == new.var, 'Statements differ in more than just variable names!'
+        if orig_var in subst:
+            assert subst[orig_var] != new.var, 'Cannot instantiate into a quantified variable!'
+        alpha_renaming(orig.formula, new.formula, orig_var, subst)
+    elif isinstance(orig, Predicate) and isinstance(new, Predicate):
+        assert orig.name == new.name, 'Statements differ in more than just variable names!'
+        assert len(orig.args) == len(new.args), 'Statements differ in more than just variable names!'
+        for orig_arg, new_arg in zip(orig.args, new.args):
+            if orig_arg == orig_var:
+                if orig_var not in subst: subst[orig_var] = new_arg
+                assert subst[orig_var] == new_arg, f'Ambiguous substitution: [{orig_var} -> {subst[orig_var]}, {new_arg}]'
+
     
+def formula_uses(formula: Prop, var_name: ModelRef):
+    if isinstance(formula, And) or isinstance(formula, Or) or isinstance(formula, Imp):
+        return formula_uses(formula.p, var_name) or formula_uses(formula.q, var_name)
+    elif isinstance(formula, ForAll) or isinstance(formula, Exists):
+        return formula.var == var_name or formula_uses(formula.formula, var_name)
+    elif isinstance(formula, Predicate):
+        return var_name in formula.args
+    return False
+
+
+def get_symbols(formula: Prop) -> tuple[Set[ModelRef], Set[ModelRef]]:
+    if isinstance(formula, And) or isinstance(formula, Or) or isinstance(formula, Imp):
+        lsym, lvar = get_symbols(formula.p)
+        rsym, rvar = get_symbols(formula.q)
+        return lsym | rsym, lvar | rvar
+    elif isinstance(formula, ForAll) or isinstance(formula, Exists):
+        assert isinstance(formula.var, ModelRef)
+        sym, var = get_symbols(formula.formula)
+        return sym | {formula.var}, var | {formula.var}
+    elif isinstance(formula, Predicate):
+        return set(formula.args), set()
+    return set(), set()
+
+
 class Argument:
-    def verify(self, line: Line):
+    def verify(self, line: Line, constants: Set[ModelRef]):
         return self.typecheck(line.typ)
     
     def typecheck(self, _: Prop) -> bool:
@@ -175,7 +221,7 @@ self_and = a, And(a, a)
 exp = Imp(a, Imp(b, c)), Imp(And(a, b), c)
 
 # quantified demorgan's laws
-x, y, z = PredVarHole('x'), PredVarHole('y'), PredVarHole('z')
+x, y, z = ModelRefHole('x'), ModelRefHole('y'), ModelRefHole('z')
 demorgan_forall_exists = Not(ForAll(x, a)), Exists(x, Not(a))
 demorgan_exists_forall = Not(Exists(x, a)), ForAll(x, Not(a))
 

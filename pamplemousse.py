@@ -49,7 +49,7 @@ def main():
                     raise Exception(f'Proof obligation {obligation} not met!')
         
     except ParseException as e:
-        print(e.explain())
+        print(e.explain(depth=0))
         
         
 if __name__ == '__main__':

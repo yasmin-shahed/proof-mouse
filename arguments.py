@@ -1,8 +1,11 @@
 from __future__ import annotations
+from collections import defaultdict
 
 from typing import TYPE_CHECKING, Callable, Set, Dict, List
 from props import *
 from unification import *
+from unification import alpha_renaming
+from unification import formula_uses
 
 if TYPE_CHECKING:
     from proof import Line, Context
@@ -138,23 +141,28 @@ class UniversalInstantiation(Argument):
     def __init__(self, quant: Line) -> None:
         self.quant = quant
         
-    def verify(self, line: Line):
-        line.variables.update(self.quant.variables)
+    def verify(self, line: Line, _):
         assert isinstance(self.quant.typ, ForAll), 'Cannot universally instantiate a formula that is not universally quantified!'
-        assert self.quant.typ.formula == line.typ, f'Cannot universally instantiate {self.quant.typ} to get {line.typ}!'
-        assert self.quant.typ.var.name not in line.variables, f'Cannot instantiate {self.quant.typ.var}: variable already instantiated!'
-        line.variables[self.quant.typ.var.name] = set()
+        subst: Dict[ModelRef, ModelRef] = {}
+        assert isinstance(self.quant.typ.var, ModelRef) # shouldn't be any holes in the proof anyway!
+        # check to make sure there's a unique rewrite and you aren't instantiating into a quantified variable
+        alpha_renaming(self.quant.typ.formula, line.typ, self.quant.typ.var, subst)
+        assert self.quant.typ.var in subst, 'Could not determine a unique substitution!'
+        if subst[self.quant.typ.var] == self.quant.typ.var or not formula_uses(self.quant.typ.formula, subst[self.quant.typ.var]):
+            # add this to the set of variables that can be generalized later
+            line.variables[subst[self.quant.typ.var].name] = set()
         return True
-        
     
 class UniversalGeneralization(Argument):
     def __init__(self, form: Line) -> None:
         self.form = form
         
-    def verify(self, line: Line):
-        line.variables.update(self.form.variables)
+    def verify(self, line: Line, _):
         assert isinstance(line.typ, ForAll), 'Cannot universally generalize to a formula that is not universally quantified!'
-        assert self.form.typ == line.typ.formula, f'Cannot universally instantiate {line.typ} to get {self.form.typ}!'
+        subst: Dict[ModelRef, ModelRef] = {}
+        assert isinstance(line.typ.var, ModelRef) # shouldn't be any holes in the proof anyway! ;)
+        alpha_renaming(line.typ.formula, self.form.typ, line.typ.var, subst)
+        assert line.typ.var in subst, 'Could not determine a unique substitution!'
         assert line.typ.var.name in line.variables, f'Cannot generalize {line.typ.var}: variable not instantiated!'
         assert len(line.variables[line.typ.var.name]) == 0, f'Cannot generalize {line.typ.var}: dependent e.i. variables are still in scope!'
         del line.variables[line.typ.var.name]
@@ -164,29 +172,54 @@ class UniversalGeneralization(Argument):
 class ExistentialInstantiation(Argument):
     def __init__(self, quant: Line) -> None:
         self.quant = quant
-        
-    def verify(self, line: Line):
-        line.variables.update(self.quant.variables)
+      
+    def verify(self, line: Line, constants: Set[ModelRef]):
         assert isinstance(self.quant.typ, Exists), 'Cannot existentially instantiate a formula that is not existentially quantified!'
-        assert self.quant.typ.formula == line.typ, f'Cannot existentiallys instantiate {self.quant.typ} to get {line.typ}!'
-        assert self.quant.typ.var.name not in line.variables, f'Cannot instantiate {self.quant.typ.var}: variable already instantiated!'
         
+        subst: Dict[ModelRef, ModelRef] = {}
+        assert isinstance(self.quant.typ.var, ModelRef) # shouldn't be any holes in the proof anyway!
+        # check to make sure there's a unique rewrite and you aren't instantiating into a quantified variable
+        alpha_renaming(self.quant.typ.formula, line.typ, self.quant.typ.var, subst)
+        assert self.quant.typ.var in subst, 'Could not determine a unique substitution!'
+        
+        # make sure that the instantiated constant is fresh
+        assert subst[self.quant.typ.var] not in constants, f'`{subst[self.quant.typ.var]}` is not a fresh constant!'
+        
+        # mark a dependence on all ui's currently in scope
         for ui in line.variables:
-            line.variables[ui].add(self.quant.typ.var.name)
+            line.variables[ui].add(subst[self.quant.typ.var].name)
         return True
+        
+        
+    # def verify(self, line: Line):
+    #     assert isinstance(self.quant.typ, Exists), 'Cannot existentially instantiate a formula that is not existentially quantified!'
+    #     subst: Dict[ModelRef, ModelRef] = {}
+    #     assert isinstance(self.quant.typ.var, ModelRef) # shouldn't be any holes in the proof anyway!
+    #     # check to make sure there's a unique rewrite and you aren't instantiating into a quantified variable
+    #     alpha_renaming(self.quant.typ.formula, line.typ, self.quant.typ.var, subst)
+    #     assert self.quant.typ.var in subst, 'Could not determine a unique substitution!'
+    #     print(self.quant.typ.formula, subst[self.quant.typ.var])
+    #     assert subst[self.quant.typ.var] == self.quant.typ.var or not formula_uses(self.quant.typ.formula, subst[self.quant.typ.var]), \
+    #         f'Cannot existentially instantiate to {subst[self.quant.typ.var]}, not a fresh constant!'
+
+    #     for ui in line.variables:
+    #         line.variables[ui].add(subst[self.quant.typ.var].name)
+    #     return True
         
     
 class ExistentialGeneralization(Argument):
     def __init__(self, form: Line) -> None:
         self.form = form
         
-    def verify(self, line: Line):
+    def verify(self, line: Line, _):
         line.variables.update(self.form.variables)
         assert isinstance(line.typ, Exists), 'Cannot existentially generalize to a formula that is not existentially quantified!'
-        assert self.form.typ == line.typ.formula, f'Cannot existentially instantiate {line.typ} to get {self.form.typ}!'
-        # assert line.typ.var.name in line.variables, f'Cannot generalize {line.typ.var}: variable not instantiated!'
+        subst: Dict[ModelRef, ModelRef] = {}
+        assert isinstance(line.typ.var, ModelRef)
+        alpha_renaming(line.typ.formula, self.form.typ, line.typ.var, subst)
+        assert line.typ.var in subst, 'Could not determine a unique substitution!'
         for ui in line.variables:
-            line.variables[ui].discard(line.typ.var.name)
+            line.variables[ui].discard(subst[line.typ.var].name)
         return True
 
 
@@ -226,22 +259,32 @@ argument_lookup: Dict[str, Callable[[List[Line]], Argument]] = {
     'ug': lambda args: UniversalGeneralization(*args)
 }
 
+def combine_variable_contexts(ctxs: tuple[Dict[str, Set[str]]]):
+    acc: Dict[str, Set[str]] = defaultdict(set)
+    for ctx in ctxs:
+        for val in ctx:
+            acc[val].update(ctx[val])
+    return dict(acc)
+
 class UninterpJust:
     def __init__(self, name: str, args: List[int]) -> None:
         self.name = name
         self.args = args
         
-    def interpret(self, ctx: Context) -> Argument:
+    def interpret(self, ctx: Context) -> tuple[Argument, Dict[str, Set[str]]]:
+        
+        variables = combine_variable_contexts(tuple(ctx.lines[arg].variables for arg in self.args))
+        
         if self.name == 'ded':
             assert tuple(sorted(self.args)) in ctx.proofs, f'{min(self.args)}-{max(self.args)} does not denote a complete proof!'
             proof = ctx.proofs[tuple(sorted(self.args))]
             hyp, ded = ctx.proof_types[proof]
             assert len(hyp) == 1, f'A proof that uses multiple hypotheses cannot be used in the deduction rule! (hypotheses={hyp})'
-            return Deduction(list(hyp)[0], ded)
+            return Deduction(list(hyp)[0], ded), variables
             
         assert self.name in argument_lookup, f'{self.name} is not a recognized justification!'
         lines = [ctx.lines[arg] for arg in self.args]
-        return argument_lookup[self.name](lines)
+        return argument_lookup[self.name](lines), variables
     
     def __repr__(self) -> str:
         return f'{self.name} {self.args}'

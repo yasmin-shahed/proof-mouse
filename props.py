@@ -45,7 +45,7 @@ class Imp:
         return f'({self.p} -> {self.q})'
     
 @dataclass(eq=True, frozen=True)
-class PredVar:
+class ModelRef:
     name: str
     
     def __repr__(self):
@@ -53,7 +53,7 @@ class PredVar:
     
     
 @dataclass(eq=True, frozen=True)
-class PredVarHole:
+class ModelRefHole:
     name: str
     
     def __repr__(self) -> str:
@@ -62,7 +62,7 @@ class PredVarHole:
 @dataclass(eq=True, frozen=True)
 class Predicate:
     name: BaseProp
-    args: tuple[PredVar]
+    args: tuple[ModelRef]
     
     def __repr__(self) -> str:
         return f'{self.name}({", ".join(map(repr, self.args))})'
@@ -70,7 +70,7 @@ class Predicate:
     
 @dataclass(eq=True, frozen=True)
 class ForAll:
-    var: Union[PredVar, PredVarHole]
+    var: Union[ModelRef, ModelRefHole]
     formula: Prop
     
     def __repr__(self) -> str:
@@ -79,7 +79,7 @@ class ForAll:
     
 @dataclass(eq=True, frozen=True)
 class Exists:
-    var: Union[PredVar, PredVarHole]
+    var: Union[ModelRef, ModelRefHole]
     formula: Prop
     
     def __repr__(self) -> str:
@@ -90,7 +90,7 @@ def Not(p: Prop) -> Prop:
     return Imp(p, False)
 
 
-Prop = Union[BaseProp, PropHole, PredVar, PredVarHole, And, Or, Imp, ForAll, Exists, Literal[True], Literal[False]]
+Prop = Union[BaseProp, PropHole, ModelRef, ModelRefHole, And, Or, Imp, ForAll, Exists, Literal[True], Literal[False]]
 
 
 def apply(f: Prop, x: Prop) -> Prop:

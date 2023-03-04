@@ -5,6 +5,7 @@ from typing import List, Dict, Set
 from props import *
 from arguments import Hypothesis, UninterpJust
 from unification import *
+from unification import get_symbols
 
 class Line:
     def __init__(self, num: int, typ: Prop, just: UninterpJust) -> None:
@@ -14,8 +15,8 @@ class Line:
         self.variables: Dict[str, Set[str]] = {}
         
     def check(self, ctx: Context):
-        self.arg = self.just.interpret(ctx)
-        assert self.arg.verify(self), f'Cannot use `{self.arg}` to produce {self.typ}!'
+        self.arg, self.variables = self.just.interpret(ctx)
+        assert self.arg.verify(self, ctx.constants), f'Cannot use `{self.arg}` to produce {self.typ}!'
         
     def __repr__(self) -> str:
         return f'{self.num}. {self.typ} {self.just}'
@@ -51,6 +52,7 @@ class Context:
         self.proofs: Dict[tuple[int, ...], Proof] = {}
         self.main_proof: Proof | None = None
         self.dependences: Dict[int, Set[int]] = defaultdict(set)
+        self.constants: Set[ModelRef] = set()
     
     def add_proof(self, proof: Proof):
         self.lines.update(proof.lines)
@@ -71,6 +73,8 @@ class Context:
             for num in sorted(self.lines.keys()):
                 print(f'{self.lines[num]}', end='\t')
                 self.lines[num].check(self)
+                sym, var = get_symbols(self.lines[num].typ)
+                self.constants |= (sym - var)
                 print('\u2713')
                 lines_checked.add(num)
                 

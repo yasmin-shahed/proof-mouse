@@ -1,6 +1,6 @@
 import pyparsing as pp
 
-from props import And, BaseProp, Exists, ForAll, Imp, Not, Or, PredVar, Predicate
+from props import And, BaseProp, Exists, ForAll, Imp, Not, Or, ModelRef, Predicate
 from arguments import UninterpJust
 from proof import Line, Proof, Context
 
@@ -41,16 +41,16 @@ def FormAction(n):
 
 
 def ForAllAction(n):
-    return ForAll(PredVar(n[0]), n[1])
+    return ForAll(ModelRef(n[0]), n[1])
 
 def ExistsAction(n):
-    return Exists(PredVar(n[0]), n[1])
+    return Exists(ModelRef(n[0]), n[1])
         
 def PredicateAction(n):
-    return Predicate(BaseProp(n[0]), tuple(map(PredVar, n[1:])))
+    return Predicate(BaseProp(n[0]), tuple(map(ModelRef, n[1:])))
 
 model_ref = pp.Word(init_chars=pp.alphas)
-predicate = pp.Char(pp.alphas.upper()) + pp.Suppress('(') + pp.delimited_list(model_ref, ',') + pp.Suppress(')')
+predicate = pp.Word(init_chars=pp.alphas) + pp.Suppress('(') + pp.delimited_list(model_ref, ',') + pp.Suppress(')')
 form = pp.Forward()
 prop = pp.Forward()
 prop <<= predicate.set_parse_action(PredicateAction) | pp.Char(pp.alphas.upper()).set_parse_action(BaseAction) | (pp.Suppress('(') + form + pp.Suppress(')')) | ('~' + prop).set_parse_action(NotAction)

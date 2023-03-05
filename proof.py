@@ -70,6 +70,12 @@ class Context:
             remaining_proofs = set(self.proofs.values())
             lines_checked: Set[int] = set()
             
+            # initialize constants from premises
+            for num in sorted(self.lines.keys()):
+                if self.lines[num].just.name == 'prem':
+                    sym, var = get_symbols(self.lines[num].typ)
+                    self.constants |= (sym - var)
+            
             for num in sorted(self.lines.keys()):
                 print(f'{self.lines[num]}', end='\t')
                 self.lines[num].check(self)

@@ -6,6 +6,7 @@ from props import *
 from unification import *
 from unification import alpha_renaming
 from unification import formula_uses
+from unification import get_symbols
 
 if TYPE_CHECKING:
     from proof import Line, Context
@@ -163,9 +164,10 @@ class UniversalGeneralization(Argument):
         assert isinstance(line.typ.var, ModelRef) # shouldn't be any holes in the proof anyway! ;)
         alpha_renaming(line.typ.formula, self.form.typ, line.typ.var, subst)
         assert line.typ.var in subst, 'Could not determine a unique substitution!'
-        assert line.typ.var.name in line.variables, f'Cannot generalize {line.typ.var}: variable not instantiated!'
-        assert len(line.variables[line.typ.var.name]) == 0, f'Cannot generalize {line.typ.var}: dependent e.i. variables are still in scope!'
-        del line.variables[line.typ.var.name]
+        assert subst[line.typ.var].name in line.variables, f'Cannot generalize `{line.typ.var}`: variable not instantiated!'
+        dependents = line.variables[subst[line.typ.var].name].intersection(get_symbols(line.typ.formula)[0])
+        assert len(dependents) == 0, f'Cannot generalize {line.typ.var}: dependent e.i. variables are still in scope! ({dependents})'
+        del line.variables[subst[line.typ.var].name]
         return True
 
 

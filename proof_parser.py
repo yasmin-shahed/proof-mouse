@@ -1,6 +1,6 @@
 import pyparsing as pp
 
-from props import And, BaseProp, Imp, Not, Or
+from props import And, BaseProp, Exists, ForAll, Imp, Not, Or, ModelRef, Predicate
 from arguments import UninterpJust
 from proof import Line, Proof, Context
 
@@ -38,15 +38,27 @@ def FormAction(n):
     if len(n) == 1:
         return n[0]
     return Imp(n[0], FormAction(n[1:]))
+
+
+def ForAllAction(n):
+    return ForAll(ModelRef(n[0]), n[1])
+
+def ExistsAction(n):
+    return Exists(ModelRef(n[0]), n[1])
         
+def PredicateAction(n):
+    return Predicate(BaseProp(n[0]), tuple(map(ModelRef, n[1:])))
 
-
+model_ref = pp.Word(init_chars=pp.alphas)
+predicate = pp.Word(init_chars=pp.alphas) + pp.Suppress('(') + pp.delimited_list(model_ref, ',') + pp.Suppress(')')
 form = pp.Forward()
 prop = pp.Forward()
-prop <<= pp.Char(pp.alphas.upper()).set_parse_action(BaseAction) | (pp.Suppress('(') + form + pp.Suppress(')')) | ('~' + prop).set_parse_action(NotAction)
+prop <<= predicate.set_parse_action(PredicateAction) | pp.Char(pp.alphas.upper()).set_parse_action(BaseAction) | (pp.Suppress('(') + form + pp.Suppress(')')) | ('~' + prop).set_parse_action(NotAction)
 conj = (pp.ZeroOrMore((prop + pp.Suppress('/\\'))) + prop)
 disj = (pp.ZeroOrMore((conj + pp.Suppress('\\/'))) + conj)
-form <<= (disj + pp.ZeroOrMore((pp.Suppress('->') + disj)))
+form <<= (disj + pp.ZeroOrMore((pp.Suppress('->') + disj))) | \
+            (pp.Suppress('exists') + model_ref + pp.Suppress(',') + form).set_parse_action(ExistsAction) | \
+            (pp.Suppress('forall') + model_ref + pp.Suppress(',') + form).set_parse_action(ForAllAction)
 
 conj.set_parse_action(ConjAction)
 disj.set_parse_action(DisjAction)
@@ -94,6 +106,9 @@ single_line = (line_start + form + just).set_parse_action(LineAction) + pp.Suppr
 embedded_proof = pp.Suppress('{') + proof + pp.Suppress('}')
 line = single_line | embedded_proof
 proof <<= pp.OneOrMore(pp.Group(line) | comment_line)
+
+if __name__ == '__main__':
+    print(form.parse_string(r'P /\ Q'))
 
 # text = r'''1. ~(Q /\ ~Z) prem;
 # 2. ~Q \/ ~~Z dm 1;

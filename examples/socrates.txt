@@ -1,0 +1,5 @@
+N(Socrates)
+1. forall x, M(x) -> N(x) prem;
+2. M(Socrates) prem;
+3. M(Socrates) -> N(Socrates) ui 1;
+4. N(Socrates) mp 3, 2;

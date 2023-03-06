@@ -4,7 +4,7 @@ from proof import Context
 from pyparsing import ParseException, delimited_list
 from typing import List
 
-from props import Not, Or, Prop, PropVar
+from props import Not, Or, Prop, PropHole
 from unification import unify
 
 def preprocess(lines: List[str]) -> List[str]:
@@ -22,7 +22,7 @@ def preprocess(lines: List[str]) -> List[str]:
     return processed_lines
 
 def is_axiom(p: Prop):
-    a = PropVar('a')
+    a = PropHole('a')
     return unify(p, Or(a, Not(a)), {}) or unify(p, Or(Not(a), a), {})
 
 def main():    
@@ -49,7 +49,7 @@ def main():
                     raise Exception(f'Proof obligation {obligation} not met!')
         
     except ParseException as e:
-        print(e.explain())
+        print(e.explain(depth=0))
         
         
 if __name__ == '__main__':

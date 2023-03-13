@@ -66,6 +66,19 @@ ProofMouse will record the proof obligation and then check your proof line by li
 If unification fails for a line, ProofMouse will print out an error detailing what went wrong and exit.
 Once all lines have been successfully verified, ProofMouse checks the list of formulas proven against the proof obligations, failing if any proof obligations have not been met.
 
+### Predicate Logic
+ProofMouse also supports predicate logic proofs, using the `forall` and `exists` quantifiers.
+Quantified formulae can be combined with the same logical connectives as for propositions, and can contain instances of any constants (free variables) or quantified variables. 
+Quantifiers have a lower precedence than all other connectives, so a formula like 
+```
+forall x, P(x) -> exists y, Q(y)
+```
+must be parenthesized as
+```
+forall x, P(x) -> (exists y, Q(y))
+```
+and the scope of the quantified `x` is assumed to extend to the entire formula.
+Extra parentheses can always be inserted to disambiguate.
 ## Inference Rules Reference
 The tables below present all the inference rules available to ProofMouse.
 The inference rules are written using type variables (`a`, `b`, `c`).
@@ -118,3 +131,36 @@ Notice that common rules like `self`, `dm`, and `comm`/`assoc` have specialized 
 | `cp` | `a -> b` | `~b -> ~a` |
 | `or_self` | `a \/ a` | `a` |
 | `and_self` | `a /\ a` | `a` |
+
+
+### Predicate Logic Rules
+In the rules that follow, `x` stands for any (quantified) variable, and `c` stands for any constant (free variable).
+`P(x)` stands for any formula in which the symbol `x` appears.
+
+The predicate logic versions of DeMorgan's laws:
+| Name | Left | Right |
+|------|------|-------|
+| `dm_fe` | `~(forall x, P(x))` | `exists x, ~P(x)` |
+| `dm_ef` | `~(exists x, P(x))` | `forall x, ~P(x)` |
+
+The instantiation/generalization rules:
+
+|Name | Given | Conclude|
+|-----|-------|---------|
+| `ui` | `forall x, P(x)` | `P(c)`|
+| `ug` | `P(c)` | `forall x, P(x)`|
+| `ei` | `exists x, P(x)` | `P(c)` |
+| `eg` | `P(c)` | `exists x, P(x)` |
+
+Note that for `ei`, `c` must not have been used as a free variable in any prior lines, or in any premises.
+For `eg` and `ug`, `x` must not be a symbol in `P(c)`, unless `x = c`.
+The constant `c` created by `ei` carries a dependence on _all_ universally instantiated constants in `P`. 
+`ug` will fail to generalize a universally instantiated constant `c` if there are any existentially instantiated constants that still carry a dependence on it.
+
+The precise semantics of these rules are as follows:
+* A proof accumulates the set of free variables used in any line. Existential instantiation (`ei`) fails if the constant being instantiated (`c`) appears in this set.
+* The premise rule (`prem`) fails if the formula being assumed as a premise contains an existentially instantiated constant.
+* Each line has a "context", which maps each universally instantiated constant in that line to the set of existentially instantiated constants that depend on it.
+* Using the `ui` rule adds `c` to the context of the instantiated line `P(c)`, and maps it to an empty set of dependents. 
+* Using the `ei` rule copies the context of the original line (`exists x, P(x)`) to the context of the instantiated line (`P(c)`) and adds `c` to the set of dependents of every universally instantiated variable in the copied context.
+* Universal generalization (`ug`) fails if the constant being generalized doesn't appear in the context of the original line (`P(c)`), or if the constant has a nonempty set of dependents. If `ug` succeeds, the context is copied over to the context of the generalized line (`forall x, P(x)`) and `c` is deleted from it.

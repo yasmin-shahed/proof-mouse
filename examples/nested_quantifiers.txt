@@ -1,0 +1,8 @@
+~(exists x, forall y, P(y) /\ ~Q(x))
+1. forall x, exists y, P(y) -> Q(x) prem;
+2. forall x, exists y, ~P(y) \/ Q(x) imp 1;
+3. forall x, exists y, ~P(y) \/ ~~Q(x) dn 2;
+4. forall x, exists y, ~(P(y) /\ ~Q(x)) dm_ao 3;
+5. forall x, ~(forall y, P(y) /\ ~Q(x)) dm_fe 4;
+6. ~(exists x, forall y, P(y) /\ ~Q(x)) dm_ef 5;
+
